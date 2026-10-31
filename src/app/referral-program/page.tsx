@@ -4,10 +4,18 @@ import PublicFooter from "@/components/public/Footer";
 import { Users, ShieldAlert, Award, Network, CheckCircle, ArrowRight } from "lucide-react";
 import prisma from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export default async function ReferralProgramPage() {
-  const commissionSettings = await prisma.commissionSetting.findMany({
-    orderBy: { level: "asc" },
-  });
+  let commissionSettings: any[] = [];
+  try {
+    commissionSettings = await prisma.commissionSetting.findMany({
+      orderBy: { level: "asc" },
+    });
+  } catch (err) {
+    console.error("Referral program fallback:", err);
+    commissionSettings = [];
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-[#0B1120]">

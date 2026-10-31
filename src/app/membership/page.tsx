@@ -4,8 +4,15 @@ import PublicFooter from "@/components/public/Footer";
 import { ShieldCheck, CheckCircle2, Clock, AlertTriangle, ArrowRight, Wallet, Hash, FileCheck } from "lucide-react";
 import prisma from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export default async function MembershipPage() {
-  const paymentSetting = await prisma.paymentSetting.findFirst();
+  let paymentSetting: any = null;
+  try {
+    paymentSetting = await prisma.paymentSetting.findFirst();
+  } catch (err) {
+    console.error("Membership page fallback:", err);
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-[#0B1120]">

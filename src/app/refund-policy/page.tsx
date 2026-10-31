@@ -2,10 +2,17 @@ import PublicNavbar from "@/components/public/Navbar";
 import PublicFooter from "@/components/public/Footer";
 import prisma from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export default async function RefundPolicyPage() {
-  const cms = await prisma.cmsContent.findUnique({
-    where: { key: "refund_policy" },
-  });
+  let cms: any = null;
+  try {
+    cms = await prisma.cmsContent.findUnique({
+      where: { key: "refund_policy" },
+    });
+  } catch (err) {
+    console.error("Refund policy CMS fallback:", err);
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-[#0B1120]">

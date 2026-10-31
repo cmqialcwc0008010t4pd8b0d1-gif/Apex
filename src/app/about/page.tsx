@@ -3,10 +3,17 @@ import PublicFooter from "@/components/public/Footer";
 import { ShieldCheck, Target, CheckCircle2, Award, BookOpen } from "lucide-react";
 import prisma from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export default async function AboutPage() {
-  const cmsAbout = await prisma.cmsContent.findUnique({
-    where: { key: "about_us" },
-  });
+  let cmsAbout: any = null;
+  try {
+    cmsAbout = await prisma.cmsContent.findUnique({
+      where: { key: "about_us" },
+    });
+  } catch (err) {
+    console.error("About CMS fallback:", err);
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-[#0B1120]">

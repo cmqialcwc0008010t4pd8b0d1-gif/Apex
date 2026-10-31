@@ -4,23 +4,31 @@ import PublicFooter from "@/components/public/Footer";
 import { BookOpen, BrainCircuit, Clock, ArrowRight, CheckCircle2 } from "lucide-react";
 import prisma from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export default async function CoursesPage() {
-  const courses = await prisma.course.findMany({
-    where: { isPublished: true },
-    include: {
-      modules: {
-        include: {
-          articles: {
-            where: { isPublished: true },
+  let courses: any[] = [];
+  try {
+    courses = await prisma.course.findMany({
+      where: { isPublished: true },
+      include: {
+        modules: {
+          include: {
+            articles: {
+              where: { isPublished: true },
+            },
           },
         },
+        games: {
+          where: { isPublished: true },
+        },
       },
-      games: {
-        where: { isPublished: true },
-      },
-    },
-    orderBy: { orderIndex: "asc" },
-  });
+      orderBy: { orderIndex: "asc" },
+    });
+  } catch (err) {
+    console.error("Courses fetch fallback:", err);
+    courses = [];
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-[#0B1120]">

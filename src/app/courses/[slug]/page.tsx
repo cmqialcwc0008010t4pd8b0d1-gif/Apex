@@ -6,6 +6,8 @@ import { BookOpen, BrainCircuit, Clock, ArrowRight, CheckCircle2, ChevronRight, 
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export default async function CourseDetailPage({
   params,
 }: {
@@ -14,24 +16,29 @@ export default async function CourseDetailPage({
   const { slug } = await params;
   const user = await getCurrentUser();
 
-  const course = await prisma.course.findUnique({
-    where: { slug },
-    include: {
-      modules: {
-        include: {
-          articles: {
-            where: { isPublished: true },
-            orderBy: { orderIndex: "asc" },
+  let course: any = null;
+  try {
+    course = await prisma.course.findUnique({
+      where: { slug },
+      include: {
+        modules: {
+          include: {
+            articles: {
+              where: { isPublished: true },
+              orderBy: { orderIndex: "asc" },
+            },
           },
+          orderBy: { orderIndex: "asc" },
         },
-        orderBy: { orderIndex: "asc" },
+        games: {
+          where: { isPublished: true },
+          orderBy: { orderIndex: "asc" },
+        },
       },
-      games: {
-        where: { isPublished: true },
-        orderBy: { orderIndex: "asc" },
-      },
-    },
-  });
+    });
+  } catch (err) {
+    console.error("Course detail fetch fallback:", err);
+  }
 
   if (!course) {
     notFound();

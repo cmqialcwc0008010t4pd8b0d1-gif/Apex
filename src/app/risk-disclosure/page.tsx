@@ -3,10 +3,17 @@ import PublicFooter from "@/components/public/Footer";
 import { AlertTriangle } from "lucide-react";
 import prisma from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export default async function RiskDisclosurePage() {
-  const cms = await prisma.cmsContent.findUnique({
-    where: { key: "risk_disclosure" },
-  });
+  let cms: any = null;
+  try {
+    cms = await prisma.cmsContent.findUnique({
+      where: { key: "risk_disclosure" },
+    });
+  } catch (err) {
+    console.error("Risk disclosure CMS fallback:", err);
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-[#0B1120]">

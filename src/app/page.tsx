@@ -4,20 +4,28 @@ import PublicFooter from "@/components/public/Footer";
 import { ShieldCheck, BookOpen, BrainCircuit, Activity, CheckCircle, ArrowRight, Layers, Lock, Award, Users } from "lucide-react";
 import prisma from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   // Fetch real course data from SQLite
-  const courses = await prisma.course.findMany({
-    where: { isPublished: true },
-    include: {
-      modules: {
-        include: {
-          articles: true,
+  let courses: any[] = [];
+  try {
+    courses = await prisma.course.findMany({
+      where: { isPublished: true },
+      include: {
+        modules: {
+          include: {
+            articles: true,
+          },
         },
+        games: true,
       },
-      games: true,
-    },
-    take: 3,
-  });
+      take: 3,
+    });
+  } catch (err) {
+    console.error("Home courses fallback:", err);
+    courses = [];
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-[#0B1120]">
