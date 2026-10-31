@@ -1,0 +1,185 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0B1120;
+  --foreground: #F8FAFC;
+  --card: #0F172A;
+  --card-foreground: #F8FAFC;
+  --border: #1E293B;
+  --input: #1E293B;
+  --primary: #0F766E;
+  --primary-foreground: #FFFFFF;
+  --secondary: #1E293B;
+  --secondary-foreground: #F8FAFC;
+  --muted: #1E293B;
+  --muted-foreground: #94A3B8;
+  --accent: #14B8A6;
+  --accent-foreground: #FFFFFF;
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --radius: 0.5rem;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* Custom Financial Card Surfaces */
+.finance-card {
+  background: #0F172A;
+  border: 1px solid #1E293B;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+}
+
+.finance-card-interactive {
+  background: #0F172A;
+  border: 1px solid #1E293B;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.finance-card-interactive:hover {
+  border-color: #334155;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+}
+
+/* Callout Boxes for Articles */
+.callout-box {
+  background: rgba(15, 118, 110, 0.1);
+  border-left: 4px solid #14B8A6;
+  padding: 1rem 1.25rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+  margin: 1.5rem 0;
+}
+
+.callout-warning {
+  background: rgba(217, 119, 6, 0.1);
+  border-left: 4px solid #F59E0B;
+  padding: 1rem 1.25rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+  margin: 1.5rem 0;
+}
+
+.callout-danger {
+  background: rgba(239, 68, 68, 0.1);
+  border-left: 4px solid #EF4444;
+  padding: 1rem 1.25rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+  margin: 1.5rem 0;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0B1120;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1E293B;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Markdown prose typography */
+.article-prose {
+  color: #CBD5E1;
+  line-height: 1.8;
+  font-size: 1.05rem;
+}
+
+.article-prose h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #F8FAFC;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.article-prose h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #F8FAFC;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid #1E293B;
+  padding-bottom: 0.5rem;
+}
+
+.article-prose h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #F8FAFC;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.article-prose p {
+  margin-bottom: 1.25rem;
+}
+
+.article-prose ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.article-prose ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.article-prose li {
+  margin-bottom: 0.5rem;
+}
+
+.article-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+}
+
+.article-prose th,
+.article-prose td {
+  border: 1px solid #1E293B;
+  padding: 0.75rem 1rem;
+  text-align: left;
+}
+
+.article-prose th {
+  background: #1E293B;
+  color: #F8FAFC;
+  font-weight: 600;
+}
+
+.article-prose blockquote {
+  border-left: 4px solid #14B8A6;
+  padding-left: 1rem;
+  color: #94A3B8;
+  font-style: italic;
+  margin: 1.5rem 0;
+}
+
+.article-prose code {
+  background: #1E293B;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+  font-family: monospace;
+  color: #38BDF8;
+  font-size: 0.9em;
+}

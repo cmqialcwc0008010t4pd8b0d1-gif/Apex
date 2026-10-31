@@ -1,0 +1,474 @@
+// Prisma Schema for ApexEdge Trading Academy
+// Uses SQLite for self-contained, persistent local database with modular architecture for PostgreSQL migration
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String         @id @default(uuid())
+  uniqueUserId    String         @unique // e.g. EDU100001
+  fullName        String
+  mobileNumber    String         @unique // Normalized with country code
+  referralCode    String         @unique // e.g. REF88421
+  passwordHash    String
+  role            String         @default("USER") // SUPER_ADMIN, FINANCE_ADMIN, COURSE_MANAGER, SUPPORT_ADMIN, ANALYST, USER
+  accountStatus   String         @default("ACTIVE") // ACTIVE, SUSPENDED, PENDING_VERIFICATION
+  membershipStatus String        @default("PENDING") // PENDING, UNDER_REVIEW, ACTIVE, EXPIRED
+  avatarUrl       String?
+  
+  // Referral hierarchy
+  referredById    String?
+  referrer        User?          @relation("UserReferrals", fields: [referredById], references: [id], onDelete: SetNull)
+  directReferrals User[]         @relation("UserReferrals")
+
+  // Relationships
+  membership           Membership?
+  paymentRequests      PaymentRequest[]
+  articleProgress      ArticleProgress[]
+  gameAttempts         GameAttempt[]
+  dailyProgress        DailyLearningProgress[]
+  bookmarks            Bookmark[]
+  walletAccount        WalletAccount?
+  transactions         FinancialTransaction[]
+  withdrawalRequests   WithdrawalRequest[]
+  notifications        Notification[]
+  supportTickets       SupportTicket[]
+  supportMessages      SupportMessage[]
+  auditLogs            AuditLog[]             @relation("AdminAuditLogs")
+  commissionRecords    CommissionRecord[]     @relation("BeneficiaryCommission")
+  sourceCommissions    CommissionRecord[]     @relation("SourceCommission")
+  bonusRecords         BonusRecord[]
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([mobileNumber])
+  @@index([uniqueUserId])
+  @@index([referralCode])
+  @@index([referredById])
+}
+
+model Membership {
+  id              String         @id @default(uuid())
+  userId          String         @unique
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status          String         @default("PENDING") // PENDING, UNDER_REVIEW, ACTIVE, EXPIRED
+  price           Float          @default(20.0)
+  currency        String         @default("USD")
+  activatedAt     DateTime?
+  expiresAt       DateTime?
+  notes           String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model PaymentRequest {
+  id              String         @id @default(uuid())
+  userId          String
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount          Float          @default(20.0)
+  currency        String         @default("USD")
+  network         String         // e.g. "BEP20" or "TRC20"
+  receivingAddress String
+  txHash          String         @unique
+  screenshotUrl   String?
+  status          String         @default("UNDER_REVIEW") // PENDING, SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, EXPIRED
+  adminNotes      String?
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([txHash])
+}
+
+model PaymentSetting {
+  id                 String      @id @default(uuid())
+  amount             Float       @default(20.0)
+  currency           String      @default("USDT")
+  bep20Address       String      @default("0x71C...ConfigureInAdmin")
+  trc20Address       String      @default("TX9...ConfigureInAdmin")
+  bep20Active        Boolean     @default(true)
+  trc20Active        Boolean     @default(true)
+  qrCodeUrl          String?
+  instructions       String      @default("Transfer exactly $20 USDT to the designated wallet address. Take a screenshot of confirmation and paste the complete Transaction Hash (TXID).")
+  reviewWindowNotice String      @default("Manual review by treasury compliance takes approximately 2-3 hours.")
+  updatedAt          DateTime    @updatedAt
+}
+
+model Course {
+  id             String         @id @default(uuid())
+  title          String
+  slug           String         @unique
+  summary        String
+  description    String
+  category       String         @default("Price Action") // Price Action, Risk Management, Psychology, Technical Analysis
+  difficulty     String         @default("Beginner") // Beginner, Intermediate, Advanced
+  estimatedHours Int            @default(4)
+  isPublished    Boolean        @default(true)
+  featured       Boolean        @default(false)
+  orderIndex     Int            @default(1)
+  
+  modules        CourseModule[]
+  games          InteractiveGame[]
+  
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model CourseModule {
+  id             String         @id @default(uuid())
+  courseId       String
+  course         Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title          String
+  description    String?
+  orderIndex     Int            @default(1)
+  
+  articles       Article[]
+  
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([courseId])
+}
+
+model Article {
+  id                 String            @id @default(uuid())
+  moduleId           String
+  module             CourseModule      @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title              String
+  slug               String            @unique
+  content            String            // Rich formatted Markdown text with callouts, notes, glossary terms
+  summary            String
+  readingTimeMinutes Int               @default(7)
+  keyTakeaways       String?           // JSON or newline-separated
+  orderIndex         Int               @default(1)
+  isPublished        Boolean           @default(true)
+  
+  progress           ArticleProgress[]
+  dailyLearnings     DailyLearning[]
+  bookmarks          Bookmark[]
+
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  @@index([moduleId])
+}
+
+model ArticleProgress {
+  id             String         @id @default(uuid())
+  userId         String
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  articleId      String
+  article        Article        @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  isCompleted    Boolean        @default(false)
+  completedAt    DateTime?
+  lastReadAt     DateTime       @default(now())
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@unique([userId, articleId])
+  @@index([userId])
+  @@index([articleId])
+}
+
+model Bookmark {
+  id             String         @id @default(uuid())
+  userId         String
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  articleId      String
+  article        Article        @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  createdAt      DateTime       @default(now())
+
+  @@unique([userId, articleId])
+}
+
+model InteractiveGame {
+  id             String         @id @default(uuid())
+  courseId       String?
+  course         Course?        @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  title          String
+  slug           String         @unique
+  type           String         // TERMINOLOGY_MATCH, CANDLESTICK_PATTERN, RISK_MANAGEMENT, QUIZ, TRADING_SCENARIO, MARKET_KNOWLEDGE, DRAG_DROP, TRUE_FALSE
+  description    String
+  configJson     String?        // Custom game payload data
+  isPublished    Boolean        @default(true)
+  orderIndex     Int            @default(1)
+  
+  questions      GameQuestion[]
+  attempts       GameAttempt[]
+  dailyLearnings DailyLearning[]
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model GameQuestion {
+  id             String          @id @default(uuid())
+  gameId         String
+  game           InteractiveGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  questionText   String
+  questionType   String          @default("MULTIPLE_CHOICE")
+  optionsJson    String          // JSON array of choices
+  correctAnswer  String          // exact answer string or key
+  explanation    String          // Detailed educational post-answer explanation
+  orderIndex     Int             @default(1)
+  
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([gameId])
+}
+
+model GameAttempt {
+  id             String          @id @default(uuid())
+  userId         String
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gameId         String
+  game           InteractiveGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  score          Int
+  maxScore       Int
+  passed         Boolean
+  answersJson    String?
+  completedAt    DateTime        @default(now())
+
+  @@index([userId])
+  @@index([gameId])
+}
+
+model DailyLearning {
+  id                 String                  @id @default(uuid())
+  date               String                  @unique // YYYY-MM-DD
+  title              String
+  description        String
+  articleId          String?
+  article            Article?                @relation(fields: [articleId], references: [id], onDelete: SetNull)
+  gameId             String?
+  game               InteractiveGame?        @relation(fields: [gameId], references: [id], onDelete: SetNull)
+  unlockCondition    String                  @default("NONE") // NONE, PREVIOUS_DAY_COMPLETED
+  isPublished        Boolean                 @default(true)
+  
+  progressEntries    DailyLearningProgress[]
+
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+
+  @@index([date])
+}
+
+model DailyLearningProgress {
+  id                 String         @id @default(uuid())
+  userId             String
+  user               User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyLearningId    String
+  dailyLearning      DailyLearning  @relation(fields: [dailyLearningId], references: [id], onDelete: Cascade)
+  completed          Boolean        @default(true)
+  streakCount        Int            @default(1)
+  completedAt        DateTime       @default(now())
+
+  @@unique([userId, dailyLearningId])
+  @@index([userId])
+}
+
+model CommissionSetting {
+  id          String   @id @default(uuid())
+  level       Int      @unique // 1 to 10
+  percentage  Float    // Level 1: 15%, Level 2: 10%, Level 3: 5%, 4-10: 0%
+  isActive    Boolean  @default(false) // Keep disabled until compliance authorization as mandated
+  updatedAt   DateTime @updatedAt
+}
+
+model CommissionRecord {
+  id                   String   @id @default(uuid())
+  beneficiaryUserId    String
+  beneficiary          User     @relation("BeneficiaryCommission", fields: [beneficiaryUserId], references: [id], onDelete: Cascade)
+  sourceUserId         String
+  sourceUser           User     @relation("SourceCommission", fields: [sourceUserId], references: [id], onDelete: Cascade)
+  level                Int
+  percentage           Float
+  amount               Float
+  status               String   @default("HELD_COMPLIANCE") // CALCULATED, HELD_COMPLIANCE, PAID, VOID
+  ledgerTransactionId  String?
+  auditNotes           String   @default("Config-only compliance mode active; no direct-selling payouts disbursed without regulatory authorization.")
+  createdAt            DateTime @default(now())
+
+  @@index([beneficiaryUserId])
+  @@index([sourceUserId])
+}
+
+model BonusSetting {
+  id                       String   @id @default(uuid())
+  title                    String   // e.g. "Bronze Executive Slaab"
+  minDirectReferrals       Int      @default(5)
+  minTeamSize              Int      @default(20)
+  bonusAmount              Float    @default(50.0)
+  maintenanceDeductionPct  Float    @default(10.0)
+  periodType               String   @default("WEEKLY") // DAILY, WEEKLY
+  isActive                 Boolean  @default(false) // Disabled by default for compliance
+  updatedAt                DateTime @updatedAt
+}
+
+model BonusRecord {
+  id               String        @id @default(uuid())
+  userId           String
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bonusSettingId   String
+  calculatedAmount Float
+  deductedAmount   Float         @default(0.0)
+  netAmount        Float
+  status           String        @default("PENDING_LEGAL_REVIEW") // PENDING_LEGAL_REVIEW, APPROVED, PAID, REJECTED
+  periodStart      DateTime
+  periodEnd        DateTime
+  auditNotes       String        @default("Held in compliance verification archive.")
+  createdAt        DateTime      @default(now())
+
+  @@index([userId])
+}
+
+model WalletAccount {
+  id                  String   @id @default(uuid())
+  userId              String   @unique
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance             Float    @default(0.0)
+  pendingWithdrawals  Float    @default(0.0)
+  totalEarned         Float    @default(0.0)
+  totalWithdrawn      Float    @default(0.0)
+  currency            String   @default("USD")
+  lastUpdatedAt       DateTime @updatedAt
+}
+
+model FinancialTransaction {
+  id               String   @id @default(uuid())
+  transactionCode  String   @unique // e.g. TXN-173000-001
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type             String   // MEMBERSHIP_PURCHASE, REFERRAL_COMMISSION, PERFORMANCE_BONUS, REFUND, WITHDRAWAL, ADJUSTMENT
+  amount           Float
+  balanceAfter     Float
+  currency         String   @default("USD")
+  status           String   @default("COMPLETED") // PENDING, COMPLETED, REJECTED, CANCELLED
+  referenceId      String?  // links to PaymentRequest or WithdrawalRequest or CommissionRecord
+  description      String
+  metadataJson     String?  // JSON for immutable audit trail
+  createdAt        DateTime @default(now())
+
+  @@index([userId])
+  @@index([transactionCode])
+  @@index([type])
+}
+
+model WithdrawalRequest {
+  id               String    @id @default(uuid())
+  requestNumber    String    @unique // e.g. WDR-2026-0001
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount           Float
+  currency         String    @default("USDT")
+  walletAddress    String
+  network          String    @default("BEP20")
+  status           String    @default("PENDING") // PENDING, UNDER_REVIEW, APPROVED, REJECTED
+  paymentReference String?
+  rejectReason     String?
+  requestedAt      DateTime  @default(now())
+  processedAt      DateTime?
+  processedById    String?
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Notification {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title      String
+  message    String
+  type       String   @default("SYSTEM") // SYSTEM, PAYMENT, COURSE, MEMBERSHIP, REFERRAL
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+}
+
+model SupportTicket {
+  id            String           @id @default(uuid())
+  ticketNumber  String           @unique // e.g. TKT-9912
+  userId        String
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject       String
+  category      String           @default("General") // Payment, Account, Course, Technical, General
+  priority      String           @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  status        String           @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  
+  messages      SupportMessage[]
+  
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model SupportMessage {
+  id            String        @id @default(uuid())
+  ticketId      String
+  ticket        SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  senderId      String
+  sender        User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  senderRole    String        @default("USER") // USER, ADMIN, SUPPORT
+  message       String
+  attachmentUrl String?
+  createdAt     DateTime      @default(now())
+
+  @@index([ticketId])
+}
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  adminId      String?
+  admin        User?    @relation("AdminAuditLogs", fields: [adminId], references: [id], onDelete: SetNull)
+  action       String   // e.g. "APPROVE_PAYMENT", "UPDATE_CMS", "REJECT_WITHDRAWAL"
+  targetEntity String   // e.g. "PaymentRequest", "User", "PlatformSetting"
+  targetId     String?
+  ipAddress    String?  @default("127.0.0.1")
+  detailsJson  String?
+  createdAt    DateTime @default(now())
+
+  @@index([adminId])
+  @@index([action])
+}
+
+model PlatformSetting {
+  id                     String   @id @default(uuid())
+  siteName               String   @default("ApexEdge Trading Academy")
+  tagline                String   @default("Institutional-Grade Financial & Trading Education")
+  supportEmail           String   @default("support@apexedgetrading.internal")
+  supportPhone           String   @default("+1-800-APEX-EDU")
+  defaultCurrency        String   @default("USD")
+  membershipPrice        Float    @default(20.0)
+  maintenanceMode        Boolean  @default(false)
+  registrationEnabled    Boolean  @default(true)
+  withdrawalsEnabled     Boolean  @default(false) // Disabled until tax and legal compliance confirmed
+  complianceHoldEnabled  Boolean  @default(true)  // Strict compliance on multi-level disbursements
+  updatedBy              String?
+  updatedAt              DateTime @updatedAt
+}
+
+model CmsContent {
+  id              String   @id @default(uuid())
+  key             String   @unique // home_hero, about_us, terms, privacy, refund_policy, risk_disclosure, faq_data
+  title           String
+  content         String
+  metaTitle       String?
+  metaDescription String?
+  updatedAt       DateTime @updatedAt
+}
