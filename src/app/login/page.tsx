@@ -28,11 +28,8 @@ export default function LoginPage() {
     if (!res.success) {
       setError(res.error || "Failed to sign in.");
     } else {
-      if (res.data?.role === "SUPER_ADMIN" || res.data?.role === "FINANCE_ADMIN") {
-        router.push("/admin");
-      } else {
-        router.push("/dashboard");
-      }
+      const targetUrl = (res.data?.role === "SUPER_ADMIN" || res.data?.role === "FINANCE_ADMIN") ? "/admin" : "/dashboard";
+      window.location.href = targetUrl;
     }
   }
 

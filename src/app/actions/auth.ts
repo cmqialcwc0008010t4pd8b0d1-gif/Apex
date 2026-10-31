@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { hashPassword, comparePassword, createSessionToken, setSessionCookie, clearSessionCookie } from "@/lib/auth";
 import { normalizeMobileNumber, isValidMobileNumber, formatUniqueUserId, generateReferralCode } from "@/lib/utils";
+import { ensureSeeded } from "@/lib/auto-seed";
 import { redirect } from "next/navigation";
 
 export interface AuthActionResult {
@@ -179,7 +180,7 @@ export async function loginUser(formData: FormData): Promise<AuthActionResult> {
 
   const normalizedMobile = normalizeMobileNumber(rawMobile);
 
-  const user = await prisma.user.findFirst({
+  let user = await prisma.user.findFirst({
     where: {
       OR: [
         { mobileNumber: normalizedMobile },
@@ -188,6 +189,23 @@ export async function loginUser(formData: FormData): Promise<AuthActionResult> {
       ],
     },
   });
+
+  // If user not found, auto-seed if database is freshly deployed
+  if (!user) {
+    const totalUsers = await prisma.user.count().catch(() => 0);
+    if (totalUsers === 0) {
+      await ensureSeeded();
+      user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { mobileNumber: normalizedMobile },
+            { mobileNumber: rawMobile },
+            { uniqueUserId: rawMobile.toUpperCase() },
+          ],
+        },
+      });
+    }
+  }
 
   if (!user) {
     return { success: false, error: "Invalid credentials. Please verify your mobile number/ID." };

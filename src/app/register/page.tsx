@@ -30,8 +30,8 @@ function RegisterForm() {
     } else {
       setSuccessId(res.data?.uniqueUserId || "EDU100000");
       setTimeout(() => {
-        router.push("/dashboard");
-      }, 2000);
+        window.location.href = "/dashboard";
+      }, 1500);
     }
   }
 
