@@ -34,7 +34,7 @@ export default async function AboutPage() {
           <div className="finance-card p-8 md:p-10 space-y-8">
             <div className="space-y-4 text-slate-300 leading-relaxed text-base">
               {cmsAbout?.content ? (
-                cmsAbout.content.split("\n\n").map((para, i) => (
+                cmsAbout.content.split("\n\n").map((para: string, i: number) => (
                   <p key={i}>{para}</p>
                 ))
               ) : (

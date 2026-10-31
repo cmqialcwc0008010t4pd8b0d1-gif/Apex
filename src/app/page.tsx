@@ -110,8 +110,8 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {courses.map((course) => {
-              const totalArticles = course.modules.reduce((sum, m) => sum + m.articles.length, 0);
+            {courses.map((course: any) => {
+              const totalArticles = course.modules?.reduce((sum: number, m: any) => sum + (m.articles?.length || 0), 0) || 0;
               return (
                 <div key={course.id} className="finance-card-interactive p-6 flex flex-col justify-between">
                   <div className="space-y-4">

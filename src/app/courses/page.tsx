@@ -47,8 +47,8 @@ export default async function CoursesPage() {
 
           {/* Courses List */}
           <div className="space-y-8">
-            {courses.map((course) => {
-              const totalArticles = course.modules.reduce((sum, m) => sum + m.articles.length, 0);
+            {courses.map((course: any) => {
+              const totalArticles = course.modules?.reduce((sum: number, m: any) => sum + (m.articles?.length || 0), 0) || 0;
               return (
                 <div key={course.id} className="finance-card p-6 md:p-8 flex flex-col lg:flex-row gap-8 items-start justify-between">
                   <div className="space-y-4 max-w-3xl">
@@ -72,10 +72,10 @@ export default async function CoursesPage() {
                     <div className="space-y-3 pt-2">
                       <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Syllabus Overview:</h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {course.modules.map((mod) => (
+                        {course.modules?.map((mod: any) => (
                           <div key={mod.id} className="p-3 rounded-lg bg-slate-900/60 border border-slate-800 text-xs text-slate-300 space-y-1">
                             <div className="font-semibold text-white">{mod.title}</div>
-                            <div className="text-slate-400">{mod.articles.length} in-depth articles included</div>
+                            <div className="text-slate-400">{mod.articles?.length || 0} in-depth articles included</div>
                           </div>
                         ))}
                       </div>

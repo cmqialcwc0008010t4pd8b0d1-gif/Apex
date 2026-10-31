@@ -87,7 +87,7 @@ export default async function CourseDetailPage({
               <p className="text-xs text-slate-400 mt-1">Text-based institutional studies with detailed terminology.</p>
             </div>
 
-            {course.modules.map((module, mIdx) => (
+            {course.modules?.map((module: any, mIdx: number) => (
               <div key={module.id} className="finance-card overflow-hidden">
                 <div className="p-5 bg-slate-900/80 border-b border-slate-800">
                   <div className="text-xs font-semibold text-teal-400 uppercase tracking-wider">Module {mIdx + 1}</div>
@@ -98,7 +98,7 @@ export default async function CourseDetailPage({
                 </div>
 
                 <div className="divide-y divide-slate-800">
-                  {module.articles.map((article, aIdx) => (
+                  {module.articles?.map((article: any, aIdx: number) => (
                     <div key={article.id} className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-slate-900/40 transition-colors">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
@@ -134,7 +134,7 @@ export default async function CourseDetailPage({
           </div>
 
           {/* Interactive Games in this Course */}
-          {course.games.length > 0 && (
+          {(course.games?.length || 0) > 0 && (
             <div className="space-y-4 pt-6">
               <div className="border-b border-slate-800 pb-3">
                 <h2 className="text-xl font-bold text-white">Interactive Educational Challenges</h2>
@@ -142,7 +142,7 @@ export default async function CourseDetailPage({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {course.games.map((game) => (
+                {course.games?.map((game: any) => (
                   <div key={game.id} className="finance-card p-5 space-y-3 flex flex-col justify-between">
                     <div className="space-y-2">
                       <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-950 text-emerald-400 border border-emerald-800">
